@@ -9,6 +9,7 @@ android {
 
     buildFeatures{
         viewBinding = true
+        dataBinding = true
     }
     defaultConfig {
         applicationId = "kr.dori.android.umc_flomaking"
@@ -18,6 +19,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        dataBinding{
+            enable = true
+        }
     }
 
     buildTypes {
@@ -47,6 +52,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("me.relex:circleindicator:2.1.6")
+    implementation("com.github.bumptech.glide:glide:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

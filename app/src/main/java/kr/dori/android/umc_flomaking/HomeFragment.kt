@@ -1,59 +1,40 @@
 package kr.dori.android.umc_flomaking
 
+import android.content.Context
 import android.os.Bundle
+import android.os.PersistableBundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import kr.dori.android.umc_flomaking.databinding.FragmentHomeBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class HomeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+//부모 클래스로 Fragment()를 가져와야 다른 엑티비티나 프래그먼트에서 참조할 수 있다. Activity 설정을 따라가면 안 된다.
+class HomeFragment: Fragment(){
+    lateinit var binding: FragmentHomeBinding
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        binding = FragmentHomeBinding.inflate(inflater,container, false)
+
+        //data가 비교적 적어서 Of를 이용해서 직접 입력했으나 보통은 함수를 이용한다.
+        val data = mutableListOf(
+            HomeList(R.drawable.img_album_legend1,"매혹적인 여성의 \n음색"),
+            HomeList(R.drawable.img_album_legend2,"매혹적인 두명의 \n여성의 음색"),
+            HomeList(R.drawable.img_album_legend3, "매혹적인 세명의 \n여성의 음색")
+        )
+        var adapter = CustomViewAdapter() //어댑터 인스턴스화
+        adapter.dataList = data //어댑터로 아이템뷰와 데이터 연결하기
+        binding.homeContentVp.adapter =adapter //홈 프래그먼트에 있는 VP의 어댑터 설정
+
+        binding.indicator.setViewPager(binding.homeContentVp) //인디케이터 설정, adapter만 리사이클러뷰어뎁터이고 실제 뷰는 뷰페이저여서 뷰페이저 설정을 따라간다.
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
 }

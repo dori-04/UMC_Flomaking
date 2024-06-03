@@ -8,6 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kr.dori.android.umc_flomaking.databinding.ActivityMainBinding
 
+
 class MainActivity : AppCompatActivity() {
     val binding by lazy {ActivityMainBinding.inflate(layoutInflater)}
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .add(R.id.main_frm, LookFragment())
             .commitAllowingStateLoss()
-
 
         binding.mainBnv.setOnItemSelectedListener{ item ->
             when (item.itemId) {
