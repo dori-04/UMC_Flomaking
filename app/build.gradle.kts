@@ -53,6 +53,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("me.relex:circleindicator:2.1.6")
     implementation("com.github.bumptech.glide:glide:4.12.0")
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
