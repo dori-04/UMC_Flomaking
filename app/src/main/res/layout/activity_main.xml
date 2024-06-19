@@ -64,7 +64,7 @@
                 android:id="@+id/main_miniplayer_title_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text= "Die Lit"
+                android:text= "SIREN"
                 android:textColor="@color/black"
                 android:textSize="13sp" />
 
@@ -72,7 +72,7 @@
                 android:id="@+id/main_miniplayer_singer_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text= "Playboi Carti"
+                android:text= "Uneducated Kid"
                 android:textSize="12sp" />
 
         </LinearLayout>

@@ -9,21 +9,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
 import kr.dori.android.umc_flomaking.databinding.ActivityMainBinding
 
-
+//song은 클래스의 멤버변수이므로 모든 메서드에서 접근이 가능하다. 흐름을 살펴보자면 onCreate()에서 Activitity의 레이아웃을 구성하고 song의 디폴트값으로 UI구성을 한다. 이후에 onStart()에서 SharedPreferences에서 "song"데이터를 불러와서 'song' 변수를 업데이트하고 setMiniPlayer(song)을 호출하여 UI를 업데이트한다.
 class MainActivity : AppCompatActivity() {
     val binding by lazy {ActivityMainBinding.inflate(layoutInflater)}
+    private var song: Song = Song()
+    private val gson: Gson = Gson()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+        //enableEdgeToEdge()dwqa
         setContentView(binding.root)
 
         initBottomNavigation()
         //메인플레이어의 곡 정보와 SongFragment의 곡 정보를 같게 하기 위한 설정이다. 데이터 타입으로는 직접 설정한 Song 데이터 클래스를 사용한다.
 
-        val song = Song(binding.mainMiniplayerTitleTv.text.toString(), binding.mainMiniplayerSingerTv.text.toString(),0,60,false)
-        Log.d("Song",song.title+ song.singer)
+//Gson 추가하면서 삭제시킴
+//        val song = Song(binding.mainMiniplayerTitleTv.text.toString(), binding.mainMiniplayerSingerTv.text.toString(),0,60,false,"siren")
+//        Log.d("Song",song.title+ song.singer)
 
 
         binding.mainPlayerCl.setOnClickListener{//Activity간 통신
@@ -33,6 +38,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("second",song.second)
             intent.putExtra("playTime",song.playTime)
             intent.putExtra("isPlaying",song.isPlaying)
+            intent.putExtra("music", song.music)
             startActivity(intent)
         }
 
@@ -107,4 +113,38 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
+    private fun setMiniPlayer(song:Song){
+        binding.mainMiniplayerProgressSb.progress = (song.second*100000)/song.playTime
+        binding.mainMiniplayerTitleTv.text = song.title
+        binding.mainMiniplayerSingerTv.text = song.singer
+    }
+
+    override fun onStart(){ //SongActivity로 갔다가 돌아오는 경우에 onStart()부터 시작한다. onResume()을 이용할 수도 있지만 그러면 화면 그려지는 시점이 뒤로 가서 불편하다.
+        super.onStart()
+        val sharedPreferences = getSharedPreferences("song", MODE_PRIVATE)
+        val songJson = sharedPreferences.getString("songData",null)
+
+        song = if(songJson == null){ //초기값 설정 어차피 onCreate 다음에 onStart
+            Song("SIREN","HOMI",0,60,false,"siren")
+        }else{ //json객체가 있다면 초기화
+            gson.fromJson(songJson, Song::class.java)
+        }
+
+        setMiniPlayer(song)
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

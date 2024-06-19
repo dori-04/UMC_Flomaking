@@ -1,9 +1,13 @@
 package kr.dori.android.umc_flomaking
 
+import android.content.SharedPreferences
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.provider.MediaStore.Audio.Media
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.Gson
 import kr.dori.android.umc_flomaking.databinding.ActivitySongBinding
 
 //AppCompatActivity = 안드로이드에서 엑티비티의 기능을 사용할 수 있도록 제공해주는 컨텍스트 중 하나
@@ -12,15 +16,19 @@ class SongActivity: AppCompatActivity() {
     lateinit var binding: ActivitySongBinding
     lateinit var song : Song
     lateinit var timer: Timer
+    private var mediaPlayer: MediaPlayer? = null //nullable 처리하는 이유는 onDestroy때 mediaPlayer 데이터를 소멸할 것이기 때문이다
+    private var gson: Gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //인플레이트는 xml 파일을 객체화시켜서 kt코드에서 사용할 수 있도록 하는 방법이다.
         binding = ActivitySongBinding.inflate(layoutInflater)
         setContentView(binding.root)//Ctrl 클릭하면 해당 뷰를 볼 수 있는데, root를 클릭해보면 root가 전체 레이아웃을 포함한다는 것을 알 수 있다.
-        initSong()
 
+        initSong()
+        startTimer()
         setPlayer(song)
+
 
         binding.songDownIb.setOnClickListener {
             finish() //Main -> Song으로 바뀌는 과정은 스택을 통해서 이루어 진다. 따라서 현재 Song 스택을 제거하기만 하면 Main이 다시 보이게 되는 것
@@ -42,13 +50,21 @@ class SongActivity: AppCompatActivity() {
                 intent.getStringExtra("singer")!!,
                 intent.getIntExtra("second",0),
                 intent.getIntExtra("playTime",0),
-                intent.getBooleanExtra("isPlaying",false)
+                intent.getBooleanExtra("isPlaying",false),
+                intent.getStringExtra("music")!!
             )
         }
-        startTimer()
+        //음원 파일을 받아오기 위해서 resource 객체의 getIdentifier 메소드를 사용한다.
+        val music = resources.getIdentifier(song.music,"raw",this.packageName)
+        //받아온 음원 파일을 mediaPlayer에게 전달시켜서 재생시킨다.
+        mediaPlayer = MediaPlayer.create(this,music)
+        song.playTime = mediaPlayer?.duration?:0 //?:는 엘비스로서 널값일 때 사용할 기본값을 설정할 수 있다.
+        if(song.playTime != null){ //duration은 mills 단위이므로 second로 치환해준다.
+            song.playTime = song.playTime/1000 //Timer Thread를 실행하기 전에 미리 song 데이터를 초기화시켜야 한다.
+        }
     }
 
-    private fun setPlayer(song:Song){ //초기값 설정
+    private fun setPlayer(song:Song){ //기본 UI 설정
         binding.songMusicTitleTv.text=intent.getStringExtra("title")!!
         binding.songSingerNameTv.text=intent.getStringExtra("singer")!!
         binding.songProgressTimeTv.text=String.format("%02d:%02d",song.second/60, song.second%60) //StartTime보다는 progressTime이 더 적절하지 않을까 싶은 부분 그래서 바꿈
@@ -65,9 +81,13 @@ class SongActivity: AppCompatActivity() {
         if(isPlaying){
             binding.songMiniplayerIv.visibility = View.GONE
             binding.songPauseIv.visibility = View.VISIBLE
+            mediaPlayer?.start()
         }else{
             binding.songMiniplayerIv.visibility = View.VISIBLE
             binding.songPauseIv.visibility = View.GONE
+            if(mediaPlayer?.isPlaying == true){ //재생 중이 아닐 때 pause 걸면 앱이 멈춘다.
+                mediaPlayer?.pause()
+            }
         }
     }
 
@@ -111,14 +131,30 @@ class SongActivity: AppCompatActivity() {
                 }
 //try는 예외가 발생할 수 있는 코드를 작성한다. catch는 예외가 발생했을 때 처리할 코드를 설정한다.
             }catch (e:InterruptedException){
-                Log.d("Song","쓰레드 사망")
+                Log.d("Song","쓰레드 사망.${e.message}")
             }
 
         }
     }
 
-    override fun onDestroy() {
+    //사용자가 포커스를 잃었을 때 음악이 중지됩니다.
+    override fun onPause(){
+        super.onPause()
+        setPlayerStatus(false)
+        //기본적으로 kotlin에서 부모클래스는 자식클래스에 대한 접근이 차단되어있다. 인스턴스화를 시키지 않는다면.. 그래서 Timer 내부에 사용된 second변수를 사용할 수 없으므로 아래와 같이 부모클래스의 second변수를 초기화시켜서 저장해야 한다.
+        song.second = ((binding.songProgressSb.progress * song.playTime)/100)/1000 //mills를 second로 만들기 위해서 1000으로 나누었고 100으로 나눈 이유는 초기 progress 설정값에 맞춰주기 위함이다.
+        //앱 종료 후에도 곡 정보와 진행상황을 저장하기 위해서 안드로이드 내부 저장소인 sharedPreference를 사용한다.
+        val sharedPreferences = getSharedPreferences("song", MODE_PRIVATE) //데이터 저장소 자체의 이름
+        val editor = sharedPreferences.edit() //에디터
+        //intent와 같이 put~ 형태로 데이터를 넣을 수도 있지만 json을 이용해 보도록 하자. json은 데이터 형식 그 자체이고 gson은 json데이터를 java객체로 바꾸거나(역직렬화) 그 반대로(직렬화) 하기 위해서 만든 라이브러리이다. (구글에서 만들어서 g가 붙음)
+        val songJson = gson.toJson(song)
+        editor.putString("songData",songJson)
+        editor.apply() //git에서 commit&push라고 생각
+    }
+
+        override fun onDestroy() {
         super.onDestroy()
         timer.interrupt() //이 설정을 하지 않으면 SongActivity를 종료하고 나서도 Timer Thread가 계속 돌아가면서 자원을 낭비한다.
+        mediaPlayer?.release() //마찬가지로 자원 낭비 방지
     }
 }
