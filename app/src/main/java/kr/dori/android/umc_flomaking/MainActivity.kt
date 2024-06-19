@@ -21,14 +21,18 @@ class MainActivity : AppCompatActivity() {
 
         initBottomNavigation()
         //메인플레이어의 곡 정보와 SongFragment의 곡 정보를 같게 하기 위한 설정이다. 데이터 타입으로는 직접 설정한 Song 데이터 클래스를 사용한다.
-        val song = Song(binding.mainMiniplayerTitleTv.text.toString(), binding.mainMiniplayerSingerTv.text.toString())
+
+        val song = Song(binding.mainMiniplayerTitleTv.text.toString(), binding.mainMiniplayerSingerTv.text.toString(),0,60,false)
         Log.d("Song",song.title+ song.singer)
 
 
-        binding.mainPlayerCl.setOnClickListener{
+        binding.mainPlayerCl.setOnClickListener{//Activity간 통신
             val intent = Intent(this,SongActivity::class.java)
             intent.putExtra("title",song.title)
             intent.putExtra("singer",song.singer)
+            intent.putExtra("second",song.second)
+            intent.putExtra("playTime",song.playTime)
+            intent.putExtra("isPlaying",song.isPlaying)
             startActivity(intent)
         }
 

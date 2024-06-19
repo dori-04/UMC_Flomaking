@@ -170,7 +170,7 @@
         app:layout_constraintTop_toBottomOf="@+id/song_like_iv_layout"  />
 
     <TextView
-        android:id="@+id/song_start_time_tv"
+        android:id="@+id/song_progress_time_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="00:00"
