@@ -108,8 +108,13 @@ class SongActivity: AppCompatActivity() {
                     if(second >= playTime){
                         break
                     }
-
-// runOnUiThread와 Handler의 공통점은 모두 background thread에서 처리할 수 없는 UI작업을 MainThread에서 처리하기 위해 사용되는 함수이다. runOnUiThread는 현재 Thread가 mainThread인지 확인하고 아니라면 main으로 보내서 작업을 처리한다. 또한 굉장히 직관적이다. Handler는 단방향 통신은 아니긴 한데, background에서 UI작업을 위해서 main에다가 runnable객체와 massage를 보내는 역할을 수행한다. 명시적으로 작업해야 될 것들이 많은 편이고 스레드를 개발자가 직접 구분해야 한다. 복잡하고 세밀한 작업일수록 유리하다. 아래 코딩은 간단하므로 runOnUiThread로 진핸한다.
+/*
+- runOnUiThread와 Handler의 공통점은 모두 background thread에서 처리할 수 없는 UI작업을 MainThread에서 처리하기 위해 사용되는 함수이다. runOnUiThread는 현재 Thread가 mainThread인지 확인하고 아니라면 main으로 보내서 작업을 처리한다. 또한 굉장히 직관적이다. Handler는 단방향 통신은 아니긴 한데, background에서 UI작업을 위해서 main에다가 runnable객체와 massage를 보내는 역할을 수행한다. 명시적으로 작업해야 될 것들이 많은 편이고 스레드를 개발자가 직접 구분해야 한다. 복잡하고 세밀한 작업일수록 유리하다. 아래 코딩은 간단하므로 runOnUiThread로 진핸한다.
+-++연산자를 알아보자. x++는 변수를 증가시킨 후에 그 값을 반환하고 ++x는 값을 반환한 후에 증가시킨다. 전자를 전위 연산자 후자를 후위 연산자라고 함
+-+=는 잘 아니까 패스
+-.inc()는 변수의 값에서 1을 더한 값을 반환하지만 변수 자체의 값은 바꾸지 않는다.
+-아래 코드를 second.inc()로 했었는데, second값 자체를 바꾸지는 않으니까 시간이 흐르지 않는 상태가 발생했다.
+ */
 
                     if(isPlaying){
                         sleep(50)
@@ -121,10 +126,7 @@ class SongActivity: AppCompatActivity() {
                             runOnUiThread{
                                 binding.songProgressTimeTv.text=String.format("%02d:%02d",second/60,second%60)
                             }
-//++연산자를 알아보자. x++는 변수를 증가시킨 후에 그 값을 반환하고 ++x는 값을 반환한 후에 증가시킨다. 전자를 전위 연산자 후자를 후위 연산자라고 함
-//+=는 잘 아니까 패스
-//.inc()는 변수의 값에서 1을 더한 값을 반환하지만 변수 자체의 값은 바꾸지 않는다.
-//아래 코드를 second.inc()로 했었는데, second값 자체를 바꾸지는 않으니까 시간이 흐르지 않는 상태가 발생했다.
+
                             second+=1
                         }
                     }
@@ -137,16 +139,19 @@ class SongActivity: AppCompatActivity() {
         }
     }
 
-    //사용자가 포커스를 잃었을 때 음악이 중지됩니다.
+/*
+- 사용자가 포커스를 잃었을 때 음악이 중지됩니다.
+-기본적으로 kotlin에서 부모클래스는 자식클래스에 대한 접근이 차단되어있다. 인스턴스화를 시키지 않는다면.. 그래서 Timer 내부에 사용된 second변수를 사용할 수 없으므로 아래와 같이 부모클래스의 second변수를 초기화시켜서 저장해야 한다.
+-mills를 second로 만들기 위해서 1000으로 나누었고 100으로 나눈 이유는 초기 progress 설정값에 맞춰주기 위함이다.
+-앱 종료 후에도 곡 정보와 진행상황을 저장하기 위해서 안드로이드 내부 저장소인 sharedPreference를 사용한다.
+-intent와 같이 put~ 형태로 데이터를 넣을 수도 있지만 json을 이용해 보도록 하자. json은 데이터 형식 그 자체이고 gson은 json데이터를 java객체로 바꾸거나(역직렬화) 그 반대로(직렬화) 하기 위해서 만든 라이브러리이다. (구글에서 만들어서 g가 붙음)
+ */
     override fun onPause(){
         super.onPause()
         setPlayerStatus(false)
-        //기본적으로 kotlin에서 부모클래스는 자식클래스에 대한 접근이 차단되어있다. 인스턴스화를 시키지 않는다면.. 그래서 Timer 내부에 사용된 second변수를 사용할 수 없으므로 아래와 같이 부모클래스의 second변수를 초기화시켜서 저장해야 한다.
-        song.second = ((binding.songProgressSb.progress * song.playTime)/100)/1000 //mills를 second로 만들기 위해서 1000으로 나누었고 100으로 나눈 이유는 초기 progress 설정값에 맞춰주기 위함이다.
-        //앱 종료 후에도 곡 정보와 진행상황을 저장하기 위해서 안드로이드 내부 저장소인 sharedPreference를 사용한다.
+        song.second = ((binding.songProgressSb.progress * song.playTime)/100)/1000
         val sharedPreferences = getSharedPreferences("song", MODE_PRIVATE) //데이터 저장소 자체의 이름
         val editor = sharedPreferences.edit() //에디터
-        //intent와 같이 put~ 형태로 데이터를 넣을 수도 있지만 json을 이용해 보도록 하자. json은 데이터 형식 그 자체이고 gson은 json데이터를 java객체로 바꾸거나(역직렬화) 그 반대로(직렬화) 하기 위해서 만든 라이브러리이다. (구글에서 만들어서 g가 붙음)
         val songJson = gson.toJson(song)
         editor.putString("songData",songJson)
         editor.apply() //git에서 commit&push라고 생각

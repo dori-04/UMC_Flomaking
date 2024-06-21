@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
     val binding by lazy {ActivityMainBinding.inflate(layoutInflater)}
     private var song: Song = Song()
     private val gson: Gson = Gson()
+    lateinit var album: Album
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,13 +46,26 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+/*
+-FragmentHome과 AlbumFragment에서 MainActivity를 컨텍스트로 참조하기 때문에 관련 메소드들을 적어둔다. 여기서 적은 메소드는 앞 두 프래그먼트에서 onAttach 메소드로 MainActivity를 불러오면 사용할 수 있다.
+-참고로 기본 fragment 세팅은 바텀네비게이션뷰에서 진행함
+-goAlbum()메소드를 통해서 넘어갈 때 즉 AlbumFragment()가 처음 시작할 때 정보를 전달하는 방법으로는 argument를 사용할 수 있다.
+-이때 argument에 넣을 데이터로는 album데이터 더미가 필요한데, 이는 HomeFragment에서 관리하므로 미리 전역변수로 album을 만든다음에 Homefragment의 onItemClick메소드에서 초기화시킨다.
 
-    //FragmentHome과 AlbumFragment에서 MainActivity를 컨텍스트로 참조하기 때문에 관련 메소드들을 적어둔다. 여기서 적은 메소드는 앞 두 프래그먼트에서 onAttach 메소드로 MainActivity를 불러오면 사용할 수 있다.
-    //참고로 기본 fragment 세팅은 바텀네비게이션뷰에서 진행함
+
+ */
     fun goAlbum(){
+
         val albumFragment = AlbumFragment()
         val transaction = supportFragmentManager.beginTransaction() //프래그먼트는 트랜잭션으로 관리하여 안정성을 높인다. 여러 의존성이 모여있을 때 사용한다.
         transaction.replace(R.id.main_frm, albumFragment)
+        albumFragment.apply{
+            arguments = Bundle().apply{
+                val gson = Gson()
+                val albumJson = gson.toJson(album)
+                putString("album_key",albumJson)
+            }
+        }
         //transaction.addToBackStack("gimozzi") 프래그먼트를 하나의 스택으로 관리한다. -> 엑티비티처럼
         transaction.commit()
     }

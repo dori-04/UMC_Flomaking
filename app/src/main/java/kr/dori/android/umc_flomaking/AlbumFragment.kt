@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.gson.Gson
 import kr.dori.android.umc_flomaking.databinding.FragmentAlbumBinding
 import kr.dori.android.umc_flomaking.databinding.FragmentAlbumDetailBinding
 import kr.dori.android.umc_flomaking.databinding.FragmentHomeBinding
@@ -16,14 +17,22 @@ import kr.dori.android.umc_flomaking.databinding.FragmentHomeBinding
 class AlbumFragment: Fragment() {
     var mainActivity: MainActivity? = null //미리 전역으로 변수 설정해두자.
     lateinit var binding: FragmentAlbumBinding
+    private var gson: Gson = Gson()
 
-    //Fragment에서는 onCreate가 아닌 onCreateView를 override해서 사용한다.
+    //Fragment에서 onCreate 대신에 onCreateView를 사용하는 이유는 다음과 같다.
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding =FragmentAlbumBinding.inflate(inflater,container,false)
+
+        val albumJson = arguments?.getString("album_key")
+        val album = gson.fromJson(albumJson, Album::class.java)
+        setinit(album)
+
+
+
         //mainAcitivity에 있는 goHome메소드 사용
         binding.albumBackIv.setOnClickListener{
             mainActivity?.goHome()
@@ -46,5 +55,11 @@ class AlbumFragment: Fragment() {
         super.onAttach(context)
 
         if(context is MainActivity)mainActivity = context
+    }
+
+    private fun setinit(album:Album){
+        binding.albumAlbumIv.setImageResource(album.coverImg!!)
+        binding.albumMusicTitleTv.text=album.title.toString()
+        binding.albumSingerNameTv.text = album.singer.toString()
     }
 }
